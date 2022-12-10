@@ -1,45 +1,46 @@
 const workoutSchema = require("../models/workout.schema");
 const mongoose = require("mongoose");
 
-// get all workouts
 const getAllWorkouts = async (req, res) => {
   try {
     const workouts = await workoutSchema.find({}).sort({ createdAt: -1 });
-    res.status(200).json(workouts).json({ message: "Success" });
-  } catch (err) {
-    res.status(400).json({ message: "retrieve all workout falied" });
-  }
-};
-
-// getsingle workout
-const getSingleWorkout = async (req, res) => {
-  try {
-    //we destructure the object to get the id or any parameters using req.params
-    const { id } = req.params;
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.sendStatus(400).json({ message: "invalid id" });
-    }
-    const workout = await workoutSchema.findById(id);
-    if (!workout) {
-      return res.status(400).json({ error: "Workout not found" });
-    }
-    res.status(200).json(workout).json({ message: " successfully" });
+    res.status(200).json(workouts);
   } catch (err) {
     res.status(400).json({ message: "retrieve single workout failed" });
   }
 };
 
-// create new workout
-const createWorkout = async (req, res) => {
-  const { title, reps, load } = req.body;
+// get a single workout
+const getSingleWorkout = async (req, res) => {
   try {
-    const workout = await workoutSchema.create({ title, reps, load });
-    res
-      .json(workout)
-      .status(200)
-      .json({ message: "workout successfully created" });
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(404).json({ error: "No such workout" });
+    }
+
+    const workout = await workoutSchema.findById(id);
+
+    if (!workout) {
+      return res.status(404).json({ error: "No such workout" });
+    }
+
+    res.status(200).json(workout);
   } catch (err) {
-    res.status(400).json({ message: "Workout creation failed" });
+    res.status(400).json({ message: "retrieve single workout failed" });
+  }
+};
+
+// create a new workout
+const createWorkout = async (req, res) => {
+  const { title, load, reps } = req.body;
+
+  // add to the database
+  try {
+    const workout = await workoutSchema.create({ title, load, reps });
+    res.status(200).json(workout);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
   }
 };
 
@@ -47,37 +48,45 @@ const createWorkout = async (req, res) => {
 const deleteWorkout = async (req, res) => {
   try {
     const { id } = req.params;
+
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.sendStatus(400).json({ message: "invalid id" });
+      return res.status(400).json({ error: "No such workout" });
     }
-    const workout = await workoutSchema.findByIdAndDelete({ _id: id });
+
+    const workout = await workoutSchema.findOneAndDelete({ _id: id });
+
     if (!workout) {
-      return res.status(400).json({ error: "Workout not found" });
+      return res.status(400).json({ error: "No such workout" });
     }
-    res.status(200).json(workout).json({ message: " successfully" });
-  } catch (err) {
-    res.status(400).json({ message: "Workout deletion failed" });
+
+    res.status(200).json(workout);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
   }
 };
 
 // update a workout
 const updateWorkout = async (req, res) => {
-
   try {
     const { id } = req.params;
+
     if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.sendStatus(400).json({ message: "invalid id" });
-      }
+      return res.status(400).json({ error: "No such workout" });
+    }
 
     const workout = await workoutSchema.findOneAndUpdate(
-      { _id: id }, {...req.body}, {new: true});
-       if (!workout) {
-      return res.status(400).json({ error: "Workout not found" });
+      { _id: id },
+      {
+        ...req.body,
+      },
+      { new: true }
+    );
+
+    if (!workout) {
+      return res.status(400).json({ error: "No such workout" });
     }
-    res
-      .json(workout)
-      .status(200)
-      .json({ message: "workout successfully updated" });
+
+    res.status(200).json(workout);
   } catch (err) {
     res.status(400).json({ message: "Workout update failed" });
   }
