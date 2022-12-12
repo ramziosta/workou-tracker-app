@@ -100,3 +100,8 @@ div.error {
 input.error {
   border: 1px solid var(--error);
 }
+h2{
+  z-index:  3;
+  position: absolute;
+  top: 350px;
+}
